@@ -90,4 +90,3 @@ async def predict(success: Success):
         'campaign id': campaign_id,
         'prediction': result
     }
-
