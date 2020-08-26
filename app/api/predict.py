@@ -24,11 +24,13 @@ class Success(BaseModel):
         df['title_desc'] = df['title'] + " " + df['description']
         df2 = df['title_desc']
         print(df2)
-        df['launch_date'] = pd.to_datetime(df['launch_date'], format='%Y/%m/%d')
-        df['finish_date'] = pd.to_datetime(df['finish_date'], format='%Y/%m/%d')
+        df['launch_date'] = pd.to_datetime(
+            df['launch_date'], format='%Y/%m/%d')
+        df['finish_date'] = pd.to_datetime(
+            df['finish_date'], format='%Y/%m/%d')
         df['monetary_goal'] = pd.to_numeric(df['monetary_goal'])
         return df2
-        
+
     @validator('title')
     def title_must_be_str(cls, value):
         assert value.isdigit(
@@ -64,6 +66,7 @@ class Success(BaseModel):
         ) == False, f'category == {value}, category value must be a string'
         return value
 
+
 @router.post('/predict')
 async def predict(success: Success):
     """
@@ -90,4 +93,3 @@ async def predict(success: Success):
         'campaign id': campaign_id,
         'prediction': result
     }
-
