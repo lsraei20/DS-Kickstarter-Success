@@ -18,10 +18,51 @@ class Success(BaseModel):
     deadline: str = Field(..., example='10/20/2020')
     category: str = Field(..., example='sports')
 
-    def to_df(self):
-        """Convert pydantic object to pandas dataframe with 1 row."""
-        return pd.DataFrame([dict(self)])
+    def prep_data(self):
+        """Prepare the data to be sent to the machine learning model"""
+        df = pd.DataFrame([dict(self)])
+        df['title_desc'] = df['title'] + " " + df['description']
+        df2 = df['title_desc']
+        print(df2)
+        df['launch_date'] = pd.to_datetime(df['launch_date'], format='%Y/%m/%d')
+        df['finish_date'] = pd.to_datetime(df['finish_date'], format='%Y/%m/%d')
+        df['monetary_goal'] = pd.to_numeric(df['monetary_goal'])
+        return df2
+        
+    @validator('title')
+    def title_must_be_str(cls, value):
+        assert value.isdigit(
+        ) == False, f'{value} == title, title value must be a string'
+        return value
 
+    @validator('blurb')
+    def blurb_must_be_str(cls, value):
+        assert value.isdigit(
+        ) == False, f'blurb == {value}, blurb value must be a string'
+        return value
+
+    @validator('goal')
+    def goal_must_be_positive(cls, value):
+        assert value > 0, f'goal == {value}, goal value must be > 0'
+        return value
+
+    @validator('launch_date')
+    def launch_date_must_be_str(cls, value):
+        assert value.isdigit(
+        ) == False, f'launch_date == {value}, launch_date value must be a string'
+        return value
+
+    @validator('deadline')
+    def deadline_must_be_str(cls, value):
+        assert value.isdigit(
+        ) == False, f'deadline == {value}, deadline value must be a string'
+        return value
+
+    @validator('category')
+    def category_must_be_str(cls, value):
+        assert value.isdigit(
+        ) == False, f'category == {value}, category value must be a string'
+        return value
 
 @router.post('/predict')
 async def predict(success: Success):
