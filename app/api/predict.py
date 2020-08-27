@@ -1,4 +1,6 @@
 import logging
+
+import dill
 import pandas as pd
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, validator
@@ -41,16 +43,20 @@ class Success(BaseModel):
         df = pd.DataFrame()
         # monetary goal row
         df['goal'] = temp['monetary_goal']
+        df.loc[0, 'goal'] = float(df.loc[0, 'goal'])
         # campaign length row
         temp['launch_date'] = pd.to_datetime(temp['launch_date'],
                                              format='%Y/%m/%d')
         temp['finish_date'] = pd.to_datetime(temp['finish_date'],
                                              format='%Y/%m/%d')
         df['cam_length'] = temp['finish_date'] - temp['launch_date']
+        df.loc[0, "cam_length"] = df.loc[0, "cam_length"].days
+        df['cam_length'] = pd.to_numeric(df['cam_length'])
         # text row
         df['text'] = temp['title_desc'] = temp['title'] + " " + temp['description']
+        df.loc[0, 'text'] = str(df.loc[0, 'text'])
 
-        print(df)
+        return df
 
 
     @validator('title')
@@ -120,18 +126,22 @@ async def predict(success: Success):
     -  'month_feedback': string, feedback about when it's
     the best time to launch your campaign
     """
-    # Unpickling machine learning model
-    model = joblib.load('app/api/lrm_model.pkl')
+    # Unpickling machine learning model & getting the df for it
+    multi_model = dill.load(open('app/api/multi_model.pkl', 'rb'))
+    multi_model_df = success.prep_model_input()
 
     # feed data to the model
-    df = success.prep_feedback_input()
-    df2 = df['title_desc'][0]
-    prediction = int((model.predict([df2]))[0])
-    probability_of_success = np.round(((model.predict_proba([df2]))[0][1])*100)
+    prediction = multi_model.predict(multi_model_df)
+    prediction = int(prediction[0])
 
     # Returning feedback to the user
+    df = success.prep_feedback_input()
     monetary_feedback, title_feedback, description_feedback, \
         campaign_len_feedback, month_launched = feedback(df)
+
+    # Return probability of success
+    probability_of_success = 5
+    # probability_of_success = np.round(((multi_model.predict_proba([multi_model_df])*100)))
 
     return {
         'prediction': prediction,
