@@ -87,9 +87,10 @@ async def predict(success: Success):
 
     """
 
-    campaign_id = 23548
+    campaign_id = 256
     result = 'pass'
     return {
         'campaign id': campaign_id,
         'prediction': result
     }
+
