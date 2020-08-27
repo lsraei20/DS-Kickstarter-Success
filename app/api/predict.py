@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field, validator
 import joblib
 from app.api.return_feedback import feedback
+import numpy as np
 
 # Connecting to fast API
 log = logging.getLogger(__name__)
@@ -106,13 +107,14 @@ async def predict(success: Success):
     df = success.prep_data()
     df2 = df['title_desc'][0]
     prediction = int((model.predict([df2]))[0])
+    probability_of_success = np.round(((model.predict_proba(['title']))[0][1])*100)
 
     # Returning feedback to the user
     monetary_feedback, title_feedback, description_feedback, \
         campaign_len_feedback, month_launched = feedback(df)
     return {
         'prediction': prediction,
-        'probability_of_success': 75,
+        'probability_of_success': probability_of_success,
         'monetary_feedback': monetary_feedback,
         'Title_feedback': title_feedback,
         'description_feedback': description_feedback,
