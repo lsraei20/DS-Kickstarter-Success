@@ -127,7 +127,7 @@ async def predict(success: Success):
     df = success.prep_feedback_input()
     df2 = df['title_desc'][0]
     prediction = int((model.predict([df2]))[0])
-    probability_of_success = np.round(((model.predict_proba(['title']))[0][1])*100)
+    probability_of_success = np.round(((model.predict_proba([df2]))[0][1])*100)
 
     # Returning feedback to the user
     monetary_feedback, title_feedback, description_feedback, \
