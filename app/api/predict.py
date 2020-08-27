@@ -1,5 +1,4 @@
 import logging
-from fastapi import APIRouter
 import pandas as pd
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, validator
@@ -38,7 +37,7 @@ class Success(BaseModel):
     def title_must_be_str(cls, value):
         assert value.isdigit(
         ) == False, f'{value} == title, title value must be a string'
-        return value,
+        return value
 
     @validator('description')
     def blurb_must_be_str(cls, value):
@@ -77,7 +76,7 @@ async def predict(success: Success):
     """
     Make a prediction of kickstarter success or fail
 
-    # Request Body
+    ### Request Body
      - 'title': 'string (title of campaign)',
      - 'description': 'string (Description of campaign)',
      - 'monetary_goal': 'int (monetary goal)',
@@ -121,3 +120,4 @@ async def predict(success: Success):
         'description_feedback': description_feedback,
         'campaign_time_feedback': campaign_len_feedback,
         'month_feedback': month_launched
+    }
