@@ -4,6 +4,8 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field, validator
 import joblib
 from app.api.return_feedback import feedback
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
 
 # Connecting to fast API
 log = logging.getLogger(__name__)
@@ -20,9 +22,9 @@ class Success(BaseModel):
     finish_date: str = Field(..., example='2020/10/20')
     category: str = Field(..., example='sports')
 
-    def prep_data(self):
-        """Prepares the data to be sent to the machine learning
-        model as a dataframe row"""
+    def prep_feedback_input(self):
+        """Prepares the data to be sent to the feedback
+        function as a dataframe row"""
         df = pd.DataFrame([dict(self)])
         df['title_desc'] = df['title'] + " " + df['description']
         df['launch_date'] = pd.to_datetime(df['launch_date'],
@@ -31,6 +33,25 @@ class Success(BaseModel):
                                            format='%Y/%m/%d')
         df['monetary_goal'] = pd.to_numeric(df['monetary_goal'])
         return df
+
+    def prep_model_input(self):
+        """Prepares the data to be sent to the machine learning
+        model as a dataframe row"""
+        temp = pd.DataFrame([dict(self)])
+        df = pd.DataFrame()
+        # monetary goal row
+        df['goal'] = temp['monetary_goal']
+        # campaign length row
+        temp['launch_date'] = pd.to_datetime(temp['launch_date'],
+                                             format='%Y/%m/%d')
+        temp['finish_date'] = pd.to_datetime(temp['finish_date'],
+                                             format='%Y/%m/%d')
+        df['cam_length'] = temp['finish_date'] - temp['launch_date']
+        # text row
+        df['text'] = temp['title_desc'] = temp['title'] + " " + temp['description']
+
+        print(df)
+
 
     @validator('title')
     def title_must_be_str(cls, value):
@@ -102,17 +123,19 @@ async def predict(success: Success):
     # Unpickling machine learning model
     model = joblib.load('app/api/lrm_model.pkl')
 
-    # Feeding user data to the model
-    df = success.prep_data()
+    # feed data to the model
+    df = success.prep_feedback_input()
     df2 = df['title_desc'][0]
     prediction = int((model.predict([df2]))[0])
+    probability_of_success = np.round(((model.predict_proba(['title']))[0][1])*100)
 
     # Returning feedback to the user
     monetary_feedback, title_feedback, description_feedback, \
         campaign_len_feedback, month_launched = feedback(df)
+
     return {
         'prediction': prediction,
-        'probability_of_success': 75,
+        'probability_of_success': probability_of_success,
         'monetary_feedback': monetary_feedback,
         'Title_feedback': title_feedback,
         'description_feedback': description_feedback,
