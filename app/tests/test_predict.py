@@ -11,14 +11,14 @@ def test_valid_input():
         '/predict',
         json={
             'title': 'Water bike',
-            'blurb': 'A bike that floats',
-            'goal': '5000',
-            'launch_date': '08/06/2020',
-            'deadline': '10/20/2020',
-            'category': 'sports'
+            'description': 'A bike that floats',
+            'monetary_goal': 5000,
+            'launch_date': '2020/08/06',
+            'finish_date': '2020/10/20',
+            'category': 'sports' 
         }
     )
-    body = response.json()
+    assert response.status_code == 200
 
 
 def test_invalid_input():
@@ -26,13 +26,12 @@ def test_invalid_input():
     response = client.post(
         '/predict',
         json={
-             'title': 'Water bike',
-             'blurb': 'A bike that floats',
-             'goal': '5000',
-             'launch_date': '08/06/2020',
-             'deadline': '10/20/2020',
-             'category': 'sports'
+            'title': 'Water bike',
+            'blurb': 'A bike that floats',
+            'goal': 'e',
+            'launch_date': '08/06/2020',
+            'deadline': '10/20/2020',
+            'category': 'sports'
         }
     )
-    body = response.json()
-
+    assert response.status_code != 200
